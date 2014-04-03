@@ -272,7 +272,7 @@ class RandomImage_wt_sb extends WP_Widget {
     		
     	?>
 
-		<a target="_blank" href="<?php echo $image['link']; ?>">
+		<a target="_blank" href="<?php echo $image['linkage']; ?>">
     		<img src="<?php echo $image['url']; ?>" width="<?php echo $instance['width']; ?>" />
 		</a>
 
@@ -288,14 +288,14 @@ class RandomImage_wt_sb extends WP_Widget {
      } 
 
     // Update and save the widget
-   function update($new_instance, $old_instance) {
+  function update($new_instance, $old_instance) {
         $instance = $old_instance;
 
        if($this->checkField($new_instance["image"])){
 			if(isset($instance["image"])){
-				array_push($instance["image"], array("url" => strip_tags($new_instance["image"]),"link" =>strip_tags($new_instance["link"])));
+				array_push($instance["image"], array("url" => strip_tags($new_instance["image"]),"linkage" =>strip_tags($new_instance["linkage"])));
 			}else{
-				$instance["image"] = array(array("url" =>strip_tags($new_instance["image"]) , "link" =>strip_tags($new_instance["link"])));
+				$instance["image"] = array(array("url" =>strip_tags($new_instance["image"]) , "linkage" =>strip_tags($new_instance["linkage"])));
 			}
 		}
 
@@ -306,7 +306,7 @@ class RandomImage_wt_sb extends WP_Widget {
 		// aplica los cambios a las imagenes
 		foreach ($edit as $value) {
 			$instance["image"][$value->id]["url"] = $value->url;
-			$instance["image"][$value->id]["link"] = $value->link;
+			$instance["image"][$value->id]["linkage"] = $value->linkage;
 		}
 		
 		$new_images = array();
@@ -314,11 +314,7 @@ class RandomImage_wt_sb extends WP_Widget {
 		foreach ($instance["image"] as $id => $value) {
 
 			if(!in_array($id,$trash)){
-				if(in_array($id,$edit)){
-					array_push($new_images, array($edit->));
-				}else{
-					array_push($new_images, $value);
-				}
+				array_push($new_images, $value);				
 			}
 		}
 
@@ -380,15 +376,15 @@ class RandomImage_wt_sb extends WP_Widget {
 				<input type="text" placeholder="url" id="<?php echo $this->get_field_id('image'); ?>" 
 			    	name="<?php echo $this->get_field_name('image'); ?>"/><br><br>
 
-			    <label for="<?php echo $this->get_field_id('link'); ?>">Link to Image</label><br>
-				<input type="text" id="<?php echo $this->get_field_id('link'); ?>" 
-			    	name="<?php echo $this->get_field_name('link'); ?>"/>
+			    <label for="<?php echo $this->get_field_id('linkage'); ?>">Link to Image</label><br>
+				<input type="text" id="<?php echo $this->get_field_id('linkage'); ?>" 
+			    	name="<?php echo $this->get_field_name('linkage'); ?>"/>
         	</p>
 
         	<input type="hidden" id="<?php echo $this->get_field_id('trash'); ?>" 
 			    	name="<?php echo $this->get_field_name('trash'); ?>"/>
 			<p> 
-				<input type="button" value="Save Changes" onclick="saveChanges(event,jQuery)"/>	
+				<input class="save_changes" type="button" value="Save Changes" <?php echo (isset($instance["image"])?null:disabled);?> onclick="saveEdit(event,jQuery)"/>	
 			</p>
 
         	<div class="ir_galery">
@@ -407,7 +403,7 @@ class RandomImage_wt_sb extends WP_Widget {
         </div>
         <?php 
 
-    }
+    } 
 
     private function css_ir(){
     	?>
@@ -430,7 +426,7 @@ class RandomImage_wt_sb extends WP_Widget {
 
     		.randomImage_panel .optionPanel{
     			text-align: center;
-    			line-height: 70px;
+    			line-height: 30px;
     			display: none;
     			background: rgba(0,0,0,0.5);
     			height: 100%;
@@ -458,7 +454,30 @@ class RandomImage_wt_sb extends WP_Widget {
     			color: white;
     			font-weight: bold;
     			display: block;
-    			margin: 5px auto;
+    			margin: 5px 0;
+    			cursor: pointer;
+    		}
+
+    		.randomImage_panel input[type='text']{
+    			transition: all 0.7s ease;
+    		}
+
+    		.randomImage_panel .save_changes{
+				background: rgb(46, 162, 204);
+				border: 1px solid rgb(0, 116, 162);
+				box-shadow: 0px 1px 0px rgba(120, 200, 230, 0.5) inset, 0px 1px 0px rgba(0, 0, 0, 0.15);
+				color: rgb(255, 255, 255);
+				font-size: 13px;
+				height: 28px;
+				margin: 0px;
+				padding: 0px 10px 1px;
+				cursor: pointer;
+				border-radius: 3px;
+				white-space: nowrap;
+    		}
+
+    		.randomImage_panel .save_changes:hover{
+    			background: rgb(46, 145, 204);
     		}
 
     	</style>
@@ -493,11 +512,10 @@ class RandomImage_wt_sb extends WP_Widget {
 
     		function showImageData(ev,$,data){
     			ir_Editing = "#" + ev.target.offsetParent.id;
-    			data = JSON.parse(data);
 
     			$(ir_Editing).parentsUntil("form").find(".randomImage_panel ");
-    			$(getId("image",ev.target)).val(data["url"]);
-    			$(getId("link",ev.target)).val(data["link"]);
+    			$(getId("image",ev.target)).val(data.url).css("borderColor","orange");
+    			$(getId("linkage",ev.target)).val(data.linkage).css("borderColor","orange");
 
     			$(getId("savewidget",ev.target)).prop("disabled","true");
 
@@ -508,27 +526,27 @@ class RandomImage_wt_sb extends WP_Widget {
     			var changes = {
     				id: ir_Editing.replace("#",""),
     				url: $(getId("image",ir_Editing)).val(),
-    				link: $(getId("link",ir_Editing)).val()				
+    				linkage: $(getId("linkage",ir_Editing)).val()				
     			}
 
     			changes_ir.toEdit.push(changes);
 
     			saveChanges($,ev.target);
 
-    			$(getId("image",ir_Editing)).val("");
-    			$(getId("link",ir_Editing)).val("");
+    			$(getId("image",ir_Editing)).val("").css("borderColor","rgb(221,221,221)");
+    			$(getId("linkage",ir_Editing)).val("").css("borderColor","rgb(221,221,221)");
     			$(getId("savewidget",ev.target)).removeProp("disabled");
 
     		}
 
     		function saveChanges($,element){
-    			$(getId("trash",element)).val(JSON.stringify(changes_ir);
+    			$(getId("trash",element)).val(JSON.stringify(changes_ir));
     		}
 
     		function getId(id, element){
 
     			if(!ir_id_widget){
-    			 var id_widget = jQuery(element).parentsUntil(".widget").find(".widget-top").parent().attr("id");
+    			 var id_widget = jQuery(element).parentsUntil(".widget",".widget-inside").parent().attr("id");
     			 ir_id_widget = "#widget-" + (id_widget.substr(id_widget.indexOf("_")+1)) + "-";
     			}
 
