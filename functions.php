@@ -242,16 +242,11 @@ endif;
 
 
 
-/*=======  twitter widgets ======*/
+/*=======  randomImage widget ======*/
 
-/* 	
-	private images = array(
-		"http://www.hdwallpapersbest.com/wp-content/uploads/2013/04/Top-Hd-Wallpapers-2.jpg",
-		"http://www.hdpaperwall.com/wp-content/uploads/2013/11/3d_wallpapers_17.jpg",
-		"http://wonderfulengineering.com/wp-content/uploads/2014/01/Technology-Wallpaper-6.jpg"
-		);*/
 
-class randomImage_wt_sb extends WP_Widget {
+
+class RandomImage_wt_sb extends WP_Widget {
 
     // Create Widget
     function __construct() {
@@ -266,52 +261,79 @@ class randomImage_wt_sb extends WP_Widget {
     	$image = $instance["image"][rand(0,count($instance["image"]) - 1)];
     	
     	echo $args["before_widget"];
-    	echo $args["before_title"];
-    	echo $instance["title"]; 
-    	echo $args["after_title"];
-    	if(isset($instance["image"])){
+
+    	if(isset($instance["title"]) && $instance["title"] != null){
+    		echo $args["before_title"];
+    		echo $instance["title"]; 
+    		echo $args["after_title"];
+    	}
+
+    	if(isset($image)){
+    		
     	?>
 
-    		<img src="<?php echo $image; ?>" width="<?php echo $instance['width']; ?>"/>
+		<a target="_blank" href="<?php echo $image['link']; ?>">
+    		<img src="<?php echo $image['url']; ?>" width="<?php echo $instance['width']; ?>" />
+		</a>
 
-    	<?php
+    	<?php 
 		}else{
 		?>
 			<h3>No hay imagenes agregadas</h3>
 		<?php
 		}
-    	echo $args["after_widget"];
 
+    	echo $args["after_widget"];
     	
-     }
+     } 
 
     // Update and save the widget
-    function update($new_instance, $old_instance) {
+   function update($new_instance, $old_instance) {
         $instance = $old_instance;
 
        if($this->checkField($new_instance["image"])){
 			if(isset($instance["image"])){
-				array_push($instance["image"], strip_tags($new_instance["image"]));
+				array_push($instance["image"], array("url" => strip_tags($new_instance["image"]),"link" =>strip_tags($new_instance["link"])));
 			}else{
-				$instance["image"] = array(strip_tags($new_instance["image"]));
+				$instance["image"] = array(array("url" =>strip_tags($new_instance["image"]) , "link" =>strip_tags($new_instance["link"])));
 			}
 		}
 
-		$trash = json_decode($new_instance("trash"))->toDelete;
+		$options = json_decode($new_instance["trash"]);
+		$edit = $options->toEdit;
+		$trash = $options->toDelete;
 
-		foreach ($trash as $id) {
-			unset($instance["image"][$id]);
+		// aplica los cambios a las imagenes
+		foreach ($edit as $value) {
+			$instance["image"][$value->id]["url"] = $value->url;
+			$instance["image"][$value->id]["link"] = $value->link;
 		}
+		
+		$new_images = array();
+		// borra las imagenes seleccionadas guardandolas en un nuevo array para resetear indices
+		foreach ($instance["image"] as $id => $value) {
+
+			if(!in_array($id,$trash)){
+				if(in_array($id,$edit)){
+					array_push($new_images, array($edit->));
+				}else{
+					array_push($new_images, $value);
+				}
+			}
+		}
+
+		$instance["image"] = $new_images; 
 
 		if(!isset($instance["sizes"])){
 			$instance["sizes"] = array(
-					"small" => 160,
-					"medium" => 260,
-					"big" => 360
+					"small" => "35%",
+					"medium" => "70%",
+					"big" => "100%"
 				);
 		}
 
-		$instance["title"] = $new_instance["title"];
+		$instance["title"] = ($this->checkField($new_instance["title"])?$new_instance["title"]:null);
+		$instance["sizeSelected"] = $new_instance["sizeSelected"];
 		$instance["width"] = $instance['sizes'][isset($new_instance['sizeSelected'])?$new_instance['sizeSelected']:"big"];
 
 
@@ -325,8 +347,8 @@ class randomImage_wt_sb extends WP_Widget {
     // If widget content needs a form
     function form($instance) {
         //widgetform in backend
-        $this->script();  
-        $this->css();
+        $this->script_ir();  
+        $this->css_ir();
         ?>
         <div class="randomImage_panel">
         	<p>
@@ -340,46 +362,54 @@ class randomImage_wt_sb extends WP_Widget {
         		<label>Small</label>
         		<input type="radio" id="<?php echo $this->get_field_id('small')?>"
         			name="<?php echo $this->get_field_name('sizeSelected')?>" value="small"
-        			<?php echo ($instance["sizeSelected"] == "small"? selected:"");?>/>
+        			<?php echo ($instance["sizeSelected"] == "small"? checked:"");?>/>
 
         		<label>Medium</label>
         		<input type="radio" id="<?php echo $this->get_field_id('medium')?>"
         			name="<?php echo $this->get_field_name('sizeSelected')?>" value="medium"
-        			<?php echo ($instance["sizeSelected"] == "medium"? selected:""); ?>/>
+        			<?php echo ($instance["sizeSelected"] == "medium"? checked:""); ?>/>
 
         		<label>Big</label>
         		<input type="radio" id="<?php echo $this->get_field_id('big')?>"
         			name="<?php echo $this->get_field_name('sizeSelected')?>" value="big"
-        			<?php echo ($instance["sizeSelected"] == "big"? selected:"");?>/>
+        			<?php echo (!isset($instance["sizeSelected"]) || $instance["sizeSelected"] == "big"? checked:"");?>/>
         	</p>
 
         	<p>
         		<label for="<?php echo $this->get_field_id('image'); ?>">Add New Image</label><br>
 				<input type="text" placeholder="url" id="<?php echo $this->get_field_id('image'); ?>" 
-			    	name="<?php echo $this->get_field_name('image'); ?>"/>
+			    	name="<?php echo $this->get_field_name('image'); ?>"/><br><br>
+
+			    <label for="<?php echo $this->get_field_id('link'); ?>">Link to Image</label><br>
+				<input type="text" id="<?php echo $this->get_field_id('link'); ?>" 
+			    	name="<?php echo $this->get_field_name('link'); ?>"/>
         	</p>
 
-        	<input type="hidden" id="trash_ir" 
+        	<input type="hidden" id="<?php echo $this->get_field_id('trash'); ?>" 
 			    	name="<?php echo $this->get_field_name('trash'); ?>"/>
+			<p> 
+				<input type="button" value="Save Changes" onclick="saveChanges(event,jQuery)"/>	
+			</p>
 
         	<div class="ir_galery">
         		<?php 
         			foreach ($instance["image"]  as $key => $value) {
-        				echo "<span class='miniImage'>
-        						<img src='" .  $value . "'/>
-        						<span id='" . $key . "' class='deletePanel' onclick='deleteImageIR(event)'>Delete</span>
-        					</span>";
+        				echo "<div class='miniImage'>
+        						<img src='" .  $value['url'] . "'/>
+        						<div id='" . $key . "' class='optionPanel'>
+									<span class='deleteOp option' onclick='deleteImageIR(event,jQuery)'>Delete</span>
+									<span class='editOp option' onclick='showImageData(event,jQuery,".json_encode($value).")'>Edit</span>
+        						</div>
+        					</div>";
         			}
         		?>
         	</div>
-
-
         </div>
-        <?php  
+        <?php 
 
     }
 
-    private function css(){
+    private function css_ir(){
     	?>
 
     	<style type="text/css">
@@ -388,79 +418,133 @@ class randomImage_wt_sb extends WP_Widget {
     			width: 100%;
     		}
 
-    		.miniImage{
+    		.randomImage_panel .miniImage{
     			display: inline-block;
     			width: 120px;
     			height: 80px;
-    			margin: 0 5px;
+    			margin: 5px;
     			position: relative;
     			vertical-align: top;
-    			text-align: center;
     			transition: all 0.8s ease;
     		}
 
-    		.deletePanel{
+    		.randomImage_panel .optionPanel{
+    			text-align: center;
+    			line-height: 70px;
     			display: none;
-    			cursor: pointer;
-    			background: rgba(0,0,0,0.7);
-    			color: white;
-    			font-weight: bold;
-    			position: absolute;
+    			background: rgba(0,0,0,0.5);
+    			height: 100%;
+    			width: 100%;
+    			position: absolute;;
     			top: 0;
     			left: 0;
     		}
 
-    		.miniImage:hover .deletePanel{
+    		.randomImage_panel .miniImage:hover .optionPanel{
     			display: block;
-    			opacity: 0.7;
     		}
 
-    		.miniImage:hover img{
-    			opacity: 0.2;
-    		}
 
-    		.miniImage img{
+    		.randomImage_panel .miniImage img{
     			width: 100%;
     			height: 100%;
     		}
 
-    		.ir_galery{
+    		.randomImage_panel .ir_galery{
     			padding: 10px 0; 
     		}
+
+    		.randomImage_panel .option{
+    			color: white;
+    			font-weight: bold;
+    			display: block;
+    			margin: 5px auto;
+    		}
+
     	</style>
     	<?php
     }
 
-    private function script(){
+    private function script_ir(){
     	?>
     	<script type="text/javascript">
-    	var imagesOptions = {
-    		"toDelete": [],
-    		"toEdit": []
-    	};
+    	
+    		var changes_ir =  {
+    			toDelete: [],
+    			toEdit: []
+    		};
 
-    		function deleteImageIR(ev){
-    			var imageId = ev.target.id;
+    		var ir_Editing =  null;
+    		var ir_id_widget = null;
 
-    			imagesOptions.toDelete.push(imageId);
+    		function deleteImageIR(ev,$){
+    			var imageId = "#" + ev.target.offsetParent.id;
 
-    			document.getElementById(imageId).offsetParent.style.width = "0";
-    			document.getElementById(imageId).offsetParent.style.height = "0";
-    			alert(imagesOptions.toDelete);
+    			changes_ir.toDelete.push(Number(ev.target.offsetParent.id));
 
-	 			document.getElementById("trash_ir").nodeValue = JSON.stringify(imagesOptions);
+    			$(imageId).parent().css({
+    				"width": "0",
+    				"height": "0"
+    			});
 
+    			saveChanges($,ev.target);
+				
+    		}
 
-		}
+    		function showImageData(ev,$,data){
+    			ir_Editing = "#" + ev.target.offsetParent.id;
+    			data = JSON.parse(data);
+
+    			$(ir_Editing).parentsUntil("form").find(".randomImage_panel ");
+    			$(getId("image",ev.target)).val(data["url"]);
+    			$(getId("link",ev.target)).val(data["link"]);
+
+    			$(getId("savewidget",ev.target)).prop("disabled","true");
+
+    		}
+
+    		function saveEdit(ev,$){
+    			
+    			var changes = {
+    				id: ir_Editing.replace("#",""),
+    				url: $(getId("image",ir_Editing)).val(),
+    				link: $(getId("link",ir_Editing)).val()				
+    			}
+
+    			changes_ir.toEdit.push(changes);
+
+    			saveChanges($,ev.target);
+
+    			$(getId("image",ir_Editing)).val("");
+    			$(getId("link",ir_Editing)).val("");
+    			$(getId("savewidget",ev.target)).removeProp("disabled");
+
+    		}
+
+    		function saveChanges($,element){
+    			$(getId("trash",element)).val(JSON.stringify(changes_ir);
+    		}
+
+    		function getId(id, element){
+
+    			if(!ir_id_widget){
+    			 var id_widget = jQuery(element).parentsUntil(".widget").find(".widget-top").parent().attr("id");
+    			 ir_id_widget = "#widget-" + (id_widget.substr(id_widget.indexOf("_")+1)) + "-";
+    			}
+
+	    		 return ir_id_widget + id;	 
+    		}
+				
+			
     	</script>
-    	<?php
+    	
+    	<?php    		
+    		
     }
 
 }
 
-register_widget('randomImage_wt_sb');
-
-
+register_widget('RandomImage_wt_sb'); 
 
 /*=== ADD FAVICON ====*/
 
