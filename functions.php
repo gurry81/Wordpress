@@ -289,7 +289,7 @@ class RandomImage_wt_sb extends WP_Widget {
 
     // Update and save the widget
   function update($new_instance, $old_instance) {
-        $instance = $old_instance;
+       $instance = $old_instance;
 
        if($this->checkField($new_instance["image"])){
 			if(isset($instance["image"])){
@@ -343,10 +343,12 @@ class RandomImage_wt_sb extends WP_Widget {
     // If widget content needs a form
     function form($instance) {
         //widgetform in backend
-        $this->script_ir();  
+        //$this->script_ir();  
         $this->css_ir();
+        //$instance["newbie"] = isset($instance["newbie"])? false : true;
+        //isset($instance["newbie"])?$this->defaultImages($instance):null;
         ?>
-        <div class="randomImage_panel">
+        <div class="randomImage_panel" onload="instance_ir_widget(".<?php echo $this->number;?>.")">
         	<p>
         		<label for="<?php echo $this->get_field_id('title'); ?>">Title</label><br>
 				<input class="titleRI" type="text" id="<?php echo $this->get_field_id('title'); ?>" 
@@ -384,7 +386,7 @@ class RandomImage_wt_sb extends WP_Widget {
         	<input type="hidden" id="<?php echo $this->get_field_id('trash'); ?>" 
 			    	name="<?php echo $this->get_field_name('trash'); ?>"/>
 			<p> 
-				<input class="save_changes" type="button" value="Save Changes" <?php echo (isset($instance["image"])?null:disabled);?> onclick="saveEdit(event,jQuery)"/>	
+				<input class="save_changes" type="button" value="Save Changes" <?php echo (isset($instance["image"])?null:disabled);?> onclick="ir_widget.saveEdit(event,jQuery)"/>	
 			</p>
 
         	<div class="ir_galery">
@@ -393,8 +395,8 @@ class RandomImage_wt_sb extends WP_Widget {
         				echo "<div class='miniImage'>
         						<img src='" .  $value['url'] . "'/>
         						<div id='" . $key . "' class='optionPanel'>
-									<span class='deleteOp option' onclick='deleteImageIR(event,jQuery)'>Delete</span>
-									<span class='editOp option' onclick='showImageData(event,jQuery,".json_encode($value).")'>Edit</span>
+									<span class='deleteOp option' onclick='ir_widget.deleteImageIR(event,jQuery)'>Delete</span>
+									<span class='editOp option' onclick='ir_widget.showImageData(event,jQuery,".json_encode($value).")'>Edit</span>
         						</div>
         					</div>";
         			}
@@ -404,6 +406,17 @@ class RandomImage_wt_sb extends WP_Widget {
         <?php 
 
     } 
+
+    private function defaultImages(&$instance){
+    	$instance["image"] = array(
+    		array("url" => "http://www.marketingdirecto.com/wp-content/uploads/2013/10/social-bro.jpg", "linkage" => "http://es.socialbro.com/"),
+    		array("url" => "http://www.marketingdirecto.com/wp-content/uploads/2013/10/social-bro.jpg", "linkage" => "http://es.socialbro.com/"),
+    		array("url" => "http://www.marketingdirecto.com/wp-content/uploads/2013/10/social-bro.jpg", "linkage" => "http://es.socialbro.com/"),
+
+    	);
+
+    	$this->update_callback();
+    }
 
     private function css_ir(){
     	?>
@@ -487,20 +500,20 @@ class RandomImage_wt_sb extends WP_Widget {
     private function script_ir(){
     	?>
     	<script type="text/javascript">
-    	
-    		var changes_ir =  {
+    	var IR_widget = function (){
+    		this.changes_ir =  {
     			toDelete: [],
     			toEdit: []
     		};
 
-    		var ir_Editing =  null;
-    		var ir_id_widget = null;
+    		this.ir_Editing =  null;
+    		this.ir_id_widget = null;
+    	}
 
-    		function deleteImageIR(ev,$){
-    			var imageId = "#" + ev.target.offsetParent.id;
+    		IR_widget.prototype.deleteImageIR = function (ev,$){
+    			 var imageId = "#" + ev.target.offsetParent.id;
 
-    			changes_ir.toDelete.push(Number(ev.target.offsetParent.id));
-
+    			this.changes_ir.toDelete.push(Number(ev.target.offsetParent.id));
     			$(imageId).parent().css({
     				"width": "0",
     				"height": "0"
@@ -510,10 +523,9 @@ class RandomImage_wt_sb extends WP_Widget {
 				
     		}
 
-    		function showImageData(ev,$,data){
-    			ir_Editing = "#" + ev.target.offsetParent.id;
+    		IR_widget.prototype.showImageData = function(ev,$,data){
+    			this.ir_Editing = "#" + ev.target.offsetParent.id;
 
-    			$(ir_Editing).parentsUntil("form").find(".randomImage_panel ");
     			$(getId("image",ev.target)).val(data.url).css("borderColor","orange");
     			$(getId("linkage",ev.target)).val(data.linkage).css("borderColor","orange");
 
@@ -521,7 +533,7 @@ class RandomImage_wt_sb extends WP_Widget {
 
     		}
 
-    		function saveEdit(ev,$){
+    		IR_widget.prototype.saveEdit = function(ev,$){
     			
     			var changes = {
     				id: ir_Editing.replace("#",""),
@@ -529,7 +541,7 @@ class RandomImage_wt_sb extends WP_Widget {
     				linkage: $(getId("linkage",ir_Editing)).val()				
     			}
 
-    			changes_ir.toEdit.push(changes);
+    			this.changes_ir.toEdit.push(changes);
 
     			saveChanges($,ev.target);
 
@@ -539,30 +551,57 @@ class RandomImage_wt_sb extends WP_Widget {
 
     		}
 
-    		function saveChanges($,element){
-    			$(getId("trash",element)).val(JSON.stringify(changes_ir));
+    		IR_widget.prototype.saveChanges = function($,element){
+    			$(getId("trash",element)).val(JSON.stringify(this.changes_ir));
     		}
 
-    		function getId(id, element){
+    		IR_widget.prototype.getId = function (id, element){
 
-    			if(!ir_id_widget){
+    			if(!this.ir_id_widget){
     			 var id_widget = jQuery(element).parentsUntil(".widget",".widget-inside").parent().attr("id");
-    			 ir_id_widget = "#widget-" + (id_widget.substr(id_widget.indexOf("_")+1)) + "-";
+    			 this.ir_id_widget = "#widget-" + (id_widget.substr(id_widget.indexOf("_")+1)) + "-";
     			}
 
-	    		 return ir_id_widget + id;	 
+	    		 return this.ir_id_widget + id;	 
     		}
-				
-			
+
+    		// instance a object for each widget
+
+    		var ir_instances = ir_instances || null;
+    		var ir_widget = ir_widget || null;
+
+    		function instance_ir_widget(number){
+
+	    		if(ir_instances){
+					ir_instances[number] = new IR_widget();
+					return;
+				}
+
+				ir_instances = Array();
+				ir_instances[number] = new IR_widget();
+    		}
+
+    		function set_current_widget(number){
+				ir_widget = ir_instances[number];
+			}
+
+
     	</script>
     	
     	<?php    		
+    		
     		
     }
 
 }
 
 register_widget('RandomImage_wt_sb'); 
+add_action( 'after_setup_theme', 'load_irWidget_js' );
+
+function load_irWidget_js(){
+	//wp_enqueue_script('ir_widget', get_template_directory() .'/irwidget.js', array('jquery'));
+	include_once get_template_directory() . "/irwidget.js";
+}
 
 /*=== ADD FAVICON ====*/
 
