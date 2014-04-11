@@ -18,7 +18,6 @@ function themezee_enqueue_scripts() {
 
 	// Register and enqueue navigation.js
 	wp_enqueue_script('themezee_jquery_navigation', get_template_directory_uri() .'/js/navigation.js', array('jquery'));
-	wp_enqueue_script('ir_widget', get_template_directory_uri() .'/irwidget.js', array('jquery'));
 	
 	// Register and Enqueue Fonts
 	wp_register_style('themezee_default_font', 'http://fonts.googleapis.com/css?family=PT+Sans');
@@ -241,374 +240,92 @@ function themezee_include_files() {
 }
 endif;
 
-//include image random widget class
-add_action( 'after_setup_theme', 'include_irwidget' );
-
-function include_irwidget(){
-	require(get_template_directory() . '/includes/image-random-widget/irwidget.php');
-}
 
 
-/*=======  randomImage widget ======*/
+/*=======  twitter widget ======*/
 
-
-
-class RandomImage_wt_sb extends WP_Widget {
+class widget_simple extends WP_Widget {
 
     // Create Widget
-    function __construct() {
-        parent::__construct(false,
-			"Random Image Widget",
-			array("description" => "A widget that generate a random image when load the page"));
+    function widget_simple() {
+        parent::WP_Widget(false, $name = 'Twitter Users', array('description' => 'Comments on how wonderful is SocialBro'));
     }
 
     // Widget Content
     function widget($args, $instance) { 
-    	 
-    	$image = $instance["image"][rand(0,count($instance["image"]) - 1)];
-    	
-    	echo $args["before_widget"];
+        extract( $args );
+        $simple_image_url = strip_tags($instance['simple_image_url']);
+        $simple_image_link = strip_tags($instance['simple_image_link']);
+        $simple_title = strip_tags($instance['simple_title']);
+        $simple_title_link = strip_tags($instance['simple_title_link']);
+        $simple_text = strip_tags($instance['simple_text']);
 
-    	if(isset($instance["title"]) && $instance["title"] != null){
-    		echo $args["before_title"];
-    		echo $instance["title"]; 
-    		echo $args["after_title"];
-    	}
+        ?>
 
-    	if(isset($image)){
-    		
-    	?>
+            <div id="latest-box">
 
-		<a target="_blank" href="<?php echo $image['linkage']; ?>">
-    		<img src="<?php echo $image['url']; ?>" width="<?php echo $instance['width']; ?>" />
-		</a>
+                <span class="img-box">
+                    <a style="cursor:default;" target="_blank" href="<?php echo $simple_image_link; ?>"><img src="<?php echo $simple_image_url; ?>"></a>
+                </span> <!-- img-box -->
+		
+               <div class="contentuss">
+		<div class="bubble">
+                <span class="latest-text">
+                    <?php echo $simple_text; ?>
+                </span> <!-- text -->
+		</div>
+		 <span class="latest-title">
+                    <a target="_blank" href="<?php echo $simple_title_link; ?>"><?php echo $simple_title; ?></a>
+                </span> <!-- title -->
+		</div>
+            </div> <!-- box -->
 
-    	<?php 
-		}else{
-		?>
-			<h3>No hay imagenes agregadas</h3>
-		<?php
-		}
-
-    	echo $args["after_widget"];
-    	
-     } 
+        <?php
+     }
 
     // Update and save the widget
-  function update($new_instance, $old_instance) {
-       $instance = $old_instance;
-
-       if($this->checkField($new_instance["image"])){
-			if(isset($instance["image"])){
-				array_push($instance["image"], array("url" => strip_tags($new_instance["image"]),"linkage" =>strip_tags($new_instance["linkage"])));
-			}else{
-				$instance["image"] = array(array("url" =>strip_tags($new_instance["image"]) , "linkage" =>strip_tags($new_instance["linkage"])));
-			}
-		}
-
-		$options = json_decode($new_instance["trash"]);
-		$edit = $options->toEdit;
-		$trash = $options->toDelete;
-
-		// aplica los cambios a las imagenes
-		foreach ($edit as $value) {
-			$instance["image"][$value->id]["url"] = $value->url;
-			$instance["image"][$value->id]["linkage"] = $value->linkage;
-		}
-		
-		$new_images = array();
-		// borra las imagenes seleccionadas guardandolas en un nuevo array para resetear indices
-		foreach ($instance["image"] as $id => $value) {
-
-			if(!in_array($id,$trash)){
-				array_push($new_images, $value);				
-			}
-		}
-
-		$instance["image"] = $new_images; 
-
-		if(!isset($instance["sizes"])){
-			$instance["sizes"] = array(
-					"small" => "35%",
-					"medium" => "70%",
-					"big" => "100%"
-				);
-		}
-
-		$instance["title"] = ($this->checkField($new_instance["title"])?$new_instance["title"]:null);
-		$instance["sizeSelected"] = $new_instance["sizeSelected"];
-		$instance["width"] = $instance['sizes'][isset($new_instance['sizeSelected'])?$new_instance['sizeSelected']:"big"];
-
-
-		return $instance;		
-    }
-
-    private function checkField($field){
-    	return (trim(strip_tags($field)))? true : false;
+    function update($new_instance, $old_instance) {
+        return $new_instance;
     }
 
     // If widget content needs a form
     function form($instance) {
         //widgetform in backend
-        //$this->script_ir();  
-        $this->css_ir();
-        //$instance["newbie"] = isset($instance["newbie"])? false : true;
-        //isset($instance["newbie"])?$this->defaultImages($instance):null;
+        $simple_image_url = strip_tags($instance['simple_image_url']);
+        $simple_image_link = strip_tags($instance['simple_image_link']);
+        $simple_title = strip_tags($instance['simple_title']);
+        $simple_title_link = strip_tags($instance['simple_title_link']);
+        $simple_text = strip_tags($instance['simple_text']);
         ?>
-        <div class="randomImage_panel" onload="instance_ir_widget(".<?php echo $this->number;?>.")">
-        	<p>
-        		<label for="<?php echo $this->get_field_id('title'); ?>">Title</label><br>
-				<input class="titleRI" type="text" id="<?php echo $this->get_field_id('title'); ?>" 
-			    	name="<?php echo $this->get_field_name('title'); ?>" value="<?php echo $instance['title']; ?>"/>
-        	</p>
+            <p>
+                <label for="<?php echo $this->get_field_id('simple_image_url'); ?>">Avatar URL: </label>
+                <input class="widefat" id="<?php echo $this->get_field_id('simple_image_url'); ?>" name="<?php echo $this->get_field_name('simple_image_url'); ?>" type="text" value="<?php echo attribute_escape($simple_image_url); ?>" />
+            </p>
+            <p>
+                <label for="<?php echo $this->get_field_id('simple_image_link'); ?>">Avatar Link (optional): </label>
+                <input class="widefat" id="<?php echo $this->get_field_id('simple_image_link'); ?>" name="<?php echo $this->get_field_name('simple_image_link'); ?>" type="text" value="<?php echo attribute_escape($simple_image_link); ?>" />
+            </p>
+            <p>
+                <label for="<?php echo $this->get_field_id('simple_title'); ?>">User handle: </label>
+                <input class="widefat" id="<?php echo $this->get_field_id('simple_title'); ?>" name="<?php echo $this->get_field_name('simple_title'); ?>" type="text" value="<?php echo attribute_escape($simple_title); ?>" />
+            </p>
+            <p>
+                <label for="<?php echo $this->get_field_id('simple_title_link'); ?>">Tweet status Link: </label>
+                <input class="widefat" id="<?php echo $this->get_field_id('simple_title_link'); ?>" name="<?php echo $this->get_field_name('simple_title_link'); ?>" type="text" value="<?php echo attribute_escape($simple_title_link); ?>" />
+            </p>
+            <p>
+                <label for="<?php echo $this->get_field_id('simple_text'); ?>">Text of the tweet: </label>
+                <textarea class="widefat" id="<?php echo $this->get_field_id('simple_text'); ?>" name="<?php echo $this->get_field_name('simple_text'); ?>"><?php echo attribute_escape($simple_text); ?></textarea>
+            </p>
 
-        	<p>
-        		<label for="<?php echo $this->get_field_id('size'); ?>">Image Size </label><br><br>
-        		<label>Small</label>
-        		<input type="radio" id="<?php echo $this->get_field_id('small')?>"
-        			name="<?php echo $this->get_field_name('sizeSelected')?>" value="small"
-        			<?php echo ($instance["sizeSelected"] == "small"? checked:"");?>/>
-
-        		<label>Medium</label>
-        		<input type="radio" id="<?php echo $this->get_field_id('medium')?>"
-        			name="<?php echo $this->get_field_name('sizeSelected')?>" value="medium"
-        			<?php echo ($instance["sizeSelected"] == "medium"? checked:""); ?>/>
-
-        		<label>Big</label>
-        		<input type="radio" id="<?php echo $this->get_field_id('big')?>"
-        			name="<?php echo $this->get_field_name('sizeSelected')?>" value="big"
-        			<?php echo (!isset($instance["sizeSelected"]) || $instance["sizeSelected"] == "big"? checked:"");?>/>
-        	</p>
-
-        	<p>
-        		<label for="<?php echo $this->get_field_id('image'); ?>">Add New Image</label><br>
-				<input type="text" placeholder="url" id="<?php echo $this->get_field_id('image'); ?>" 
-			    	name="<?php echo $this->get_field_name('image'); ?>"/><br><br>
-
-			    <label for="<?php echo $this->get_field_id('linkage'); ?>">Link to Image</label><br>
-				<input type="text" id="<?php echo $this->get_field_id('linkage'); ?>" 
-			    	name="<?php echo $this->get_field_name('linkage'); ?>"/>
-        	</p>
-
-        	<input type="hidden" id="<?php echo $this->get_field_id('trash'); ?>" 
-			    	name="<?php echo $this->get_field_name('trash'); ?>"/>
-			<p> 
-				<input class="save_changes" type="button" value="Save Changes" <?php echo (isset($instance["image"])?null:disabled);?> onclick="ir_widget.saveEdit(event,jQuery)"/>	
-			</p>
-
-        	<div class="ir_galery">
-        		<?php 
-        			foreach ($instance["image"]  as $key => $value) {
-        				echo "<div class='miniImage'>
-        						<img src='" .  $value['url'] . "'/>
-        						<div id='" . $key . "' class='optionPanel'>
-									<span class='deleteOp option' onclick='ir_widget.deleteImageIR(event,jQuery)'>Delete</span>
-									<span class='editOp option' onclick='ir_widget.showImageData(event,jQuery,".json_encode($value).")'>Edit</span>
-        						</div>
-        					</div>";
-        			}
-        		?>
-        	</div>
-        </div>
-        <?php 
-
-    } 
-
-    private function defaultImages(&$instance){
-    	$instance["image"] = array(
-    		array("url" => "http://www.marketingdirecto.com/wp-content/uploads/2013/10/social-bro.jpg", "linkage" => "http://es.socialbro.com/"),
-    		array("url" => "http://www.marketingdirecto.com/wp-content/uploads/2013/10/social-bro.jpg", "linkage" => "http://es.socialbro.com/"),
-    		array("url" => "http://www.marketingdirecto.com/wp-content/uploads/2013/10/social-bro.jpg", "linkage" => "http://es.socialbro.com/"),
-
-    	);
-
-    	$this->update_callback();
-    }
-
-    private function css_ir(){
-    	?>
-
-    	<style type="text/css">
-
-    		.randomImage_panel input[type=text]{
-    			width: 100%;
-    		}
-
-    		.randomImage_panel .miniImage{
-    			display: inline-block;
-    			width: 120px;
-    			height: 80px;
-    			margin: 5px;
-    			position: relative;
-    			vertical-align: top;
-    			transition: all 0.8s ease;
-    		}
-
-    		.randomImage_panel .optionPanel{
-    			text-align: center;
-    			line-height: 30px;
-    			display: none;
-    			background: rgba(0,0,0,0.5);
-    			height: 100%;
-    			width: 100%;
-    			position: absolute;;
-    			top: 0;
-    			left: 0;
-    		}
-
-    		.randomImage_panel .miniImage:hover .optionPanel{
-    			display: block;
-    		}
-
-
-    		.randomImage_panel .miniImage img{
-    			width: 100%;
-    			height: 100%;
-    		}
-
-    		.randomImage_panel .ir_galery{
-    			padding: 10px 0; 
-    		}
-
-    		.randomImage_panel .option{
-    			color: white;
-    			font-weight: bold;
-    			display: block;
-    			margin: 5px 0;
-    			cursor: pointer;
-    		}
-
-    		.randomImage_panel input[type='text']{
-    			transition: all 0.7s ease;
-    		}
-
-    		.randomImage_panel .save_changes{
-				background: rgb(46, 162, 204);
-				border: 1px solid rgb(0, 116, 162);
-				box-shadow: 0px 1px 0px rgba(120, 200, 230, 0.5) inset, 0px 1px 0px rgba(0, 0, 0, 0.15);
-				color: rgb(255, 255, 255);
-				font-size: 13px;
-				height: 28px;
-				margin: 0px;
-				padding: 0px 10px 1px;
-				cursor: pointer;
-				border-radius: 3px;
-				white-space: nowrap;
-    		}
-
-    		.randomImage_panel .save_changes:hover{
-    			background: rgb(46, 145, 204);
-    		}
-
-    	</style>
-    	<?php
-    }
-
-    private function script_ir(){
-    	?>
-    	<script type="text/javascript">
-    	var IR_widget = function (){
-    		this.changes_ir =  {
-    			toDelete: [],
-    			toEdit: []
-    		};
-
-    		this.ir_Editing =  null;
-    		this.ir_id_widget = null;
-    	}
-
-    		IR_widget.prototype.deleteImageIR = function (ev,$){
-    			 var imageId = "#" + ev.target.offsetParent.id;
-
-    			this.changes_ir.toDelete.push(Number(ev.target.offsetParent.id));
-    			$(imageId).parent().css({
-    				"width": "0",
-    				"height": "0"
-    			});
-
-    			saveChanges($,ev.target);
-				
-    		}
-
-    		IR_widget.prototype.showImageData = function(ev,$,data){
-    			this.ir_Editing = "#" + ev.target.offsetParent.id;
-
-    			$(getId("image",ev.target)).val(data.url).css("borderColor","orange");
-    			$(getId("linkage",ev.target)).val(data.linkage).css("borderColor","orange");
-
-    			$(getId("savewidget",ev.target)).prop("disabled","true");
-
-    		}
-
-    		IR_widget.prototype.saveEdit = function(ev,$){
-    			
-    			var changes = {
-    				id: this.ir_Editing.replace("#",""),
-    				url: $(getId("image",this.ir_Editing)).val(),
-    				linkage: $(getId("linkage",this.ir_Editing)).val()				
-    			}
-
-    			this.changes_ir.toEdit.push(changes);
-
-    			saveChanges($,ev.target);
-
-    			$(getId("image",this.ir_Editing)).val("").css("borderColor","rgb(221,221,221)");
-    			$(getId("linkage",this.ir_Editing)).val("").css("borderColor","rgb(221,221,221)");
-    			$(getId("savewidget",ev.target)).removeProp("disabled");
-
-    		}
-
-    		IR_widget.prototype.saveChanges = function($,element){
-    			$(getId("trash",element)).val(JSON.stringify(this.changes_ir));
-    		}
-
-    		IR_widget.prototype.getId = function (id, element){
-
-    			if(!this.ir_id_widget){
-    			 var id_widget = jQuery(element).parentsUntil(".widget",".widget-inside").parent().attr("id");
-    			 this.ir_id_widget = "#widget-" + (id_widget.substr(id_widget.indexOf("_")+1)) + "-";
-    			}
-
-	    		 return this.ir_id_widget + id;	 
-    		}
-
-    		// instance a object for each widget
-
-    		var ir_instances = ir_instances || null;
-    		var ir_widget = ir_widget || null;
-
-    		function instance_ir_widget(number){
-
-	    		if(ir_instances){
-					ir_instances[number] = new IR_widget();
-					return;
-				}
-
-				ir_instances = Array();
-				ir_instances[number] = new IR_widget();
-    		}
-
-    		function set_current_widget(number){
-				ir_widget = ir_instances[number];
-			}
-
-
-    	</script>
-    	
-    	<?php    		
-    		
-    		
+        <?php       
     }
 
 }
 
-register_widget('RandomImage_wt_sb'); 
-//add_action( 'after_setup_theme', 'load_irWidget_js' );
+register_widget('widget_simple');
 
-function load_irWidget_js(){
-	//wp_enqueue_script('ir_widget', get_template_directory() .'/irwidget.js', array('jquery'));
-	include_once get_template_directory() . "/irwidget.js";
-}
+
 
 /*=== ADD FAVICON ====*/
 
@@ -621,7 +338,7 @@ add_action('wp_head', 'childtheme_favicon');
 /*===	LIMIT EXCERPT ===*/
 
 function custom_excerpt_length( $length ) {
-	return 10;
+	return 50;
 }
 add_filter( 'excerpt_length', 'custom_excerpt_length', 999 );
 
@@ -711,17 +428,62 @@ function themezee_change_max_image_size($max, $size) {
 // Change Excerpt Length
 add_filter('excerpt_length', 'themezee_excerpt_length');
 function themezee_excerpt_length($length) {
-    return 50;
+    return 55;
 }
 
 
 // Change Excerpt More
 add_filter('excerpt_more', 'themezee_excerpt_more');
 function themezee_excerpt_more($more) {
-    return '';
+    return ' [...]';
 }
 
+// Change excerpt filter
+add_filter('get_the_excerpt','show_excerpt');
+function show_excerpt($text){
+		
+	$text= trim($text) ? $text : get_the_content();
+	$text = str_replace("[...]", "", $text); // to change
+	$excerpt = strip_tags($text);
+	$excerpt = substr($excerpt,0,(strlen(strip_tags($excerpt)) < 280? strlen($excerpt) : 280));
+	$text_words = explode(" ",$text);
+	$excerpt_words = explode(" ",$excerpt);
+		
+	$last = count($excerpt_words) - 1; 
 
+	if(strlen($excerpt_words[$last]) < strlen($text_words[$last])){
+
+		array_pop($excerpt_words); 
+
+	}
+		
+	$excerpt = implode(" ", $excerpt_words);
+
+	return "<p>" . catch_first_image_post($text) . $excerpt . apply_filters("excerpt_more") . "</p>";
+
+}
+
+function catch_first_image_post($text){
+	
+	$has_img = preg_match('/<img.+src=[\'"].+[\'"].*\/>/i', $text, $matches);
+	
+	if($has_img){
+  		$first_img = $matches[0];
+	} else {
+		preg_match('/<img.+src=[\'"].+[\'"].*\/>/i', get_the_content(), $matches);
+  		$first_img = $matches[0];
+	}
+		
+	return $first_img;
+}
+
+/** USE IF U WANT TO ALLOW HTML TAGS**/
+function debug_close_tags(){
+
+	$tags = array("</strong>","</b>");
+
+	return implode("",$tags);
+}
 
 
 // Custom Template for comments and pingbacks.
