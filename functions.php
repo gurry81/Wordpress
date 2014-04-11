@@ -18,6 +18,7 @@ function themezee_enqueue_scripts() {
 
 	// Register and enqueue navigation.js
 	wp_enqueue_script('themezee_jquery_navigation', get_template_directory_uri() .'/js/navigation.js', array('jquery'));
+	wp_enqueue_script('ir_widget', get_template_directory_uri() .'/irwidget.js', array('jquery'));
 	
 	// Register and Enqueue Fonts
 	wp_register_style('themezee_default_font', 'http://fonts.googleapis.com/css?family=PT+Sans');
@@ -240,6 +241,12 @@ function themezee_include_files() {
 }
 endif;
 
+//include image random widget class
+add_action( 'after_setup_theme', 'include_irwidget' );
+
+function include_irwidget(){
+	require(get_template_directory() . '/includes/image-random-widget/irwidget.php');
+}
 
 
 /*=======  randomImage widget ======*/
@@ -536,17 +543,17 @@ class RandomImage_wt_sb extends WP_Widget {
     		IR_widget.prototype.saveEdit = function(ev,$){
     			
     			var changes = {
-    				id: ir_Editing.replace("#",""),
-    				url: $(getId("image",ir_Editing)).val(),
-    				linkage: $(getId("linkage",ir_Editing)).val()				
+    				id: this.ir_Editing.replace("#",""),
+    				url: $(getId("image",this.ir_Editing)).val(),
+    				linkage: $(getId("linkage",this.ir_Editing)).val()				
     			}
 
     			this.changes_ir.toEdit.push(changes);
 
     			saveChanges($,ev.target);
 
-    			$(getId("image",ir_Editing)).val("").css("borderColor","rgb(221,221,221)");
-    			$(getId("linkage",ir_Editing)).val("").css("borderColor","rgb(221,221,221)");
+    			$(getId("image",this.ir_Editing)).val("").css("borderColor","rgb(221,221,221)");
+    			$(getId("linkage",this.ir_Editing)).val("").css("borderColor","rgb(221,221,221)");
     			$(getId("savewidget",ev.target)).removeProp("disabled");
 
     		}
@@ -596,7 +603,7 @@ class RandomImage_wt_sb extends WP_Widget {
 }
 
 register_widget('RandomImage_wt_sb'); 
-add_action( 'after_setup_theme', 'load_irWidget_js' );
+//add_action( 'after_setup_theme', 'load_irWidget_js' );
 
 function load_irWidget_js(){
 	//wp_enqueue_script('ir_widget', get_template_directory() .'/irwidget.js', array('jquery'));
