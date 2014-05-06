@@ -25,10 +25,6 @@ function themezee_enqueue_scripts() {
 	
 	wp_register_style('themezee_default_title_font', 'http://fonts.googleapis.com/css?family=Arimo');
 	wp_enqueue_style('themezee_default_title_font');
-
-	// ImageRandom Widget
-	//wp_enqueue_script('themezee_widget_imageRandom', get_template_directory_uri() .'/js/imageRandom_wt.js', array('jquery'));
-	
 	
 }
 endif;
@@ -246,233 +242,90 @@ endif;
 
 
 
-/*=======  randomImage widget ======*/
+/*=======  twitter widget ======*/
 
-
-
-class RandomImage_wt_sb extends WP_Widget {
+class widget_simple extends WP_Widget {
 
     // Create Widget
-    function __construct() {
-        parent::__construct(false,
-			"Random Image Widget",
-			array("description" => "A widget that generate a random image when load the page"));
+    function widget_simple() {
+        parent::WP_Widget(false, $name = 'Twitter Users', array('description' => 'Comments on how wonderful is SocialBro'));
     }
 
     // Widget Content
     function widget($args, $instance) { 
-    	 
-    	$image = $instance["image"][rand(0,count($instance["image"]) - 1)];
-    	
-    	echo $args["before_widget"];
+        extract( $args );
+        $simple_image_url = strip_tags($instance['simple_image_url']);
+        $simple_image_link = strip_tags($instance['simple_image_link']);
+        $simple_title = strip_tags($instance['simple_title']);
+        $simple_title_link = strip_tags($instance['simple_title_link']);
+        $simple_text = strip_tags($instance['simple_text']);
 
-    	if(isset($instance["title"]) && $instance["title"] != null){
-    		echo $args["before_title"];
-    		echo $instance["title"]; 
-    		echo $args["after_title"];
-    	}
+        ?>
 
-    	if(isset($image)){
-    		
-    	?>
+            <div id="latest-box">
 
-		<a target="_blank" href="<?php echo $image['link']; ?>">
-    		<img src="<?php echo $image['url']; ?>" width="<?php echo $instance['width']; ?>" />
-		</a>
+                <span class="img-box">
+                    <a style="cursor:default;" target="_blank" href="<?php echo $simple_image_link; ?>"><img src="<?php echo $simple_image_url; ?>"></a>
+                </span> <!-- img-box -->
+		
+               <div class="contentuss">
+		<div class="bubble">
+                <span class="latest-text">
+                    <?php echo $simple_text; ?>
+                </span> <!-- text -->
+		</div>
+		 <span class="latest-title">
+                    <a target="_blank" href="<?php echo $simple_title_link; ?>"><?php echo $simple_title; ?></a>
+                </span> <!-- title -->
+		</div>
+            </div> <!-- box -->
 
-    	<?php 
-		}else{
-		?>
-			<h3>No hay imagenes agregadas</h3>
-		<?php
-		}
-
-    	echo $args["after_widget"];
-    	
-     } 
+        <?php
+     }
 
     // Update and save the widget
-   function update($new_instance, $old_instance) {
-        $instance = $old_instance;
-
-       if($this->checkField($new_instance["image"])){
-			if(isset($instance["image"])){
-				array_push($instance["image"], array("url" => strip_tags($new_instance["image"]),"link" =>strip_tags($new_instance["link"])));
-			}else{
-				$instance["image"] = array(array("url" =>strip_tags($new_instance["image"]) , "link" =>strip_tags($new_instance["link"])));
-			}
-		}
-
-
-		$trash = json_decode($new_instance["trash"]);
-		$new_images = array();
-
-		foreach ($instance["image"] as $id => $value) {
-
-			if(!in_array($id,$trash)){
-				array_push($new_images, $value);
-			}
-		}
-
-		$instance["image"] = $new_images; 
-
-		if(!isset($instance["sizes"])){
-			$instance["sizes"] = array(
-					"small" => "35%",
-					"medium" => "70%",
-					"big" => "100%"
-				);
-		}
-
-		$instance["title"] = ($this->checkField($new_instance["title"])?$new_instance["title"]:null);
-		$instance["sizeSelected"] = $new_instance["sizeSelected"];
-		$instance["width"] = $instance['sizes'][isset($new_instance['sizeSelected'])?$new_instance['sizeSelected']:"big"];
-
-
-		return $instance;		
-    }
-
-    private function checkField($field){
-    	return (trim(strip_tags($field)))? true : false;
+    function update($new_instance, $old_instance) {
+        return $new_instance;
     }
 
     // If widget content needs a form
     function form($instance) {
         //widgetform in backend
-        $this->script_ir();  
-        $this->css_ir();
+        $simple_image_url = strip_tags($instance['simple_image_url']);
+        $simple_image_link = strip_tags($instance['simple_image_link']);
+        $simple_title = strip_tags($instance['simple_title']);
+        $simple_title_link = strip_tags($instance['simple_title_link']);
+        $simple_text = strip_tags($instance['simple_text']);
         ?>
-        <div class="randomImage_panel">
-        	<p>
-        		<label for="<?php echo $this->get_field_id('title'); ?>">Title</label><br>
-				<input class="titleRI" type="text" id="<?php echo $this->get_field_id('title'); ?>" 
-			    	name="<?php echo $this->get_field_name('title'); ?>" value="<?php echo $instance['title']; ?>"/>
-        	</p>
+            <p>
+                <label for="<?php echo $this->get_field_id('simple_image_url'); ?>">Avatar URL: </label>
+                <input class="widefat" id="<?php echo $this->get_field_id('simple_image_url'); ?>" name="<?php echo $this->get_field_name('simple_image_url'); ?>" type="text" value="<?php echo attribute_escape($simple_image_url); ?>" />
+            </p>
+            <p>
+                <label for="<?php echo $this->get_field_id('simple_image_link'); ?>">Avatar Link (optional): </label>
+                <input class="widefat" id="<?php echo $this->get_field_id('simple_image_link'); ?>" name="<?php echo $this->get_field_name('simple_image_link'); ?>" type="text" value="<?php echo attribute_escape($simple_image_link); ?>" />
+            </p>
+            <p>
+                <label for="<?php echo $this->get_field_id('simple_title'); ?>">User handle: </label>
+                <input class="widefat" id="<?php echo $this->get_field_id('simple_title'); ?>" name="<?php echo $this->get_field_name('simple_title'); ?>" type="text" value="<?php echo attribute_escape($simple_title); ?>" />
+            </p>
+            <p>
+                <label for="<?php echo $this->get_field_id('simple_title_link'); ?>">Tweet status Link: </label>
+                <input class="widefat" id="<?php echo $this->get_field_id('simple_title_link'); ?>" name="<?php echo $this->get_field_name('simple_title_link'); ?>" type="text" value="<?php echo attribute_escape($simple_title_link); ?>" />
+            </p>
+            <p>
+                <label for="<?php echo $this->get_field_id('simple_text'); ?>">Text of the tweet: </label>
+                <textarea class="widefat" id="<?php echo $this->get_field_id('simple_text'); ?>" name="<?php echo $this->get_field_name('simple_text'); ?>"><?php echo attribute_escape($simple_text); ?></textarea>
+            </p>
 
-        	<p>
-        		<label for="<?php echo $this->get_field_id('size'); ?>">Image Size </label><br><br>
-        		<label>Small</label>
-        		<input type="radio" id="<?php echo $this->get_field_id('small')?>"
-        			name="<?php echo $this->get_field_name('sizeSelected')?>" value="small"
-        			<?php echo ($instance["sizeSelected"] == "small"? checked:"");?>/>
-
-        		<label>Medium</label>
-        		<input type="radio" id="<?php echo $this->get_field_id('medium')?>"
-        			name="<?php echo $this->get_field_name('sizeSelected')?>" value="medium"
-        			<?php echo ($instance["sizeSelected"] == "medium"? checked:""); ?>/>
-
-        		<label>Big</label>
-        		<input type="radio" id="<?php echo $this->get_field_id('big')?>"
-        			name="<?php echo $this->get_field_name('sizeSelected')?>" value="big"
-        			<?php echo (!isset($instance["sizeSelected"]) || $instance["sizeSelected"] == "big"? checked:"");?>/>
-        	</p>
-
-        	<p>
-        		<label for="<?php echo $this->get_field_id('image'); ?>">Add New Image</label><br>
-				<input type="text" placeholder="url" id="<?php echo $this->get_field_id('image'); ?>" 
-			    	name="<?php echo $this->get_field_name('image'); ?>"/><br><br>
-
-			    <label for="<?php echo $this->get_field_id('link'); ?>">Link to Image</label><br>
-				<input type="text" id="<?php echo $this->get_field_id('link'); ?>" 
-			    	name="<?php echo $this->get_field_name('link'); ?>"/>
-        	</p>
-
-        	<input type="hidden" id="<?php echo $this->get_field_id('trash'); ?>" 
-			    	name="<?php echo $this->get_field_name('trash'); ?>"/>
-
-        	<div class="ir_galery">
-        		<?php 
-        			foreach ($instance["image"]  as $key => $value) {
-        				echo "<span class='miniImage'>
-        						<img src='" .  $value['url'] . "'/>
-        						<span id='" . $key . "' class='deletePanel' onclick='deleteImageIR(event,jQuery)'>Delete</span>
-        					</span>";
-        			}
-        		?>
-        	</div>
-        </div>
-        <?php 
-
-    }
-
-    private function css_ir(){
-    	?>
-
-    	<style type="text/css">
-
-    		.randomImage_panel input[type=text]{
-    			width: 100%;
-    		}
-
-    		.miniImage{
-    			display: inline-block;
-    			width: 120px;
-    			height: 80px;
-    			margin: 5px;
-    			position: relative;
-    			vertical-align: top;
-    			transition: all 0.8s ease;
-    		}
-
-    		.deletePanel{
-    			text-align: center;
-    			line-height: 70px;
-    			display: none;
-    			cursor: pointer;
-    			background: rgba(0,0,0,0.5);
-    			color: white;
-    			font-weight: bold;
-    			height: 100%;
-    			width: 100%;
-    			position: absolute;;
-    			top: 0;
-    			left: 0;
-    		}
-
-    		.miniImage:hover .deletePanel{
-    			display: block;
-    		}
-
-    		.miniImage img{
-    			width: 100%;
-    			height: 100%;
-    		}
-
-    		.ir_galery{
-    			padding: 10px 0; 
-    		}
-    	</style>
-    	<?php
-    }
-
-    private function script_ir(){
-    	?>
-    	<script type="text/javascript">
-    	
-    		var toDelete =  [];
-
-    		function deleteImageIR(ev,$){
-    			var imageId = "#" + ev.target.id;
-
-    			toDelete.push(Number(ev.target.id));
-
-    			$(imageId).parent().css({
-    				"width": "0",
-    				"height": "0"
-    			});
-				
-    			$(imageId).parentsUntil("form").find(".randomImage_panel :input[type='hidden']").val(JSON.stringify(toDelete));
-    		}
-				
-			
-    	</script>
-    	
-    	<?php
+        <?php       
     }
 
 }
 
-register_widget('RandomImage_wt_sb'); 
+register_widget('widget_simple');
+
+
 
 /*=== ADD FAVICON ====*/
 
@@ -554,6 +407,60 @@ function posts_custom_id_columns($column_name, $id){
     }
 }
 
+//Show Post's views
+add_filter('manage_posts_columns', 'posts_columns_views', 6);
+    add_action('manage_posts_custom_column', 'posts_custom_views_columns', 6, 2);
+
+function posts_columns_views($defaults){
+	$defaults['views'] = 'Views';
+	return $defaults;
+}
+
+function posts_custom_views_columns($column_name,$id){
+	if($column_name == 'views'){
+
+		$query =  array(
+			'days' => -1,
+			'summarize' => '',
+			'api_key' => '87b51eeea2d3',
+			'blog_uri' => 'http://wordpress-sb1.socialbro.me/',
+			'table' => 'postviews',
+			'post_id' => $id
+		);
+
+		$request = curl_init();
+		$headers = array(
+			CURLOPT_RETURNTRANSFER => 1,
+			CURLOPT_URL => 'http://stats.wordpress.com/csv.php?' . http_build_query($query)
+		);
+
+		curl_setopt_array($request,$headers);
+		$response = curl_exec($request);
+		
+		echo get_total_views($response);
+
+		curl_close($request);
+
+		// echo Jetpack_Options::get_option('id');
+	}
+}
+
+function get_total_views($csv){
+	$csv = explode("\n", $csv);
+	array_shift($csv);
+
+	$total = 0;
+
+	foreach ($csv as $value) {
+		$total += $value;
+	}
+
+	return $total;
+}
+
+// Make 
+
+
 // Add custom image size to Media Upload
 add_filter( 'image_size_names_choose', 'themezee_add_image_size_names' );  
 function themezee_add_image_size_names($sizes) {
@@ -585,8 +492,19 @@ function themezee_excerpt_more($more) {
     return '';
 }
 
+// Author's page
+add_action("pre_get_posts","all_posts_of_author");
 
+function all_posts_of_author(){
 
+	if(is_author()){
+		global $sitepress;
+ 
+		remove_filter('posts_join', array($sitepress, 'posts_join_filter'));
+		remove_filter('posts_where', array($sitepress,'posts_where_filter'));
+	}
+
+}
 
 // Custom Template for comments and pingbacks.
 if ( ! function_exists( 'themezee_list_comments' ) ):
